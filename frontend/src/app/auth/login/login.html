@@ -1,0 +1,100 @@
+<div class="login-container">
+    <mat-card class="login-card">
+        <mat-card-header>
+            <mat-card-title>
+                <h2>Welcome to Hotel Management System</h2>
+            </mat-card-title>
+            <mat-card-subtitle>
+                Please sign in to continue
+            </mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content>
+            <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+                <!-- User Type Toggle -->
+                <div class="user-type-toggle">
+                    <button type="button" mat-stroked-button [color]="userType === 'customer' ? 'primary' : 'basic'"
+                        (click)="toggleUserType()">
+                        Customer Login
+                    </button>
+                    <button type="button" mat-stroked-button [color]="userType === 'user' ? 'primary' : 'basic'"
+                        (click)="toggleUserType()">
+                        Staff/Admin Login
+                    </button>
+                </div>
+
+                <!-- Email Field -->
+                <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Email</mat-label>
+                    <input matInput formControlName="email" type="email" placeholder="Enter your email">
+                    <mat-icon matSuffix>email</mat-icon>
+                    <mat-error *ngIf="email?.hasError('required')">
+                        Email is required
+                    </mat-error>
+                    <mat-error *ngIf="email?.hasError('email')">
+                        Please enter a valid email
+                    </mat-error>
+                </mat-form-field>
+
+                <!-- Password Field -->
+                <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Password</mat-label>
+                    <input matInput formControlName="password" [type]="hidePassword ? 'password' : 'text'"
+                        placeholder="Enter your password">
+                    <button type="button" mat-icon-button matSuffix (click)="hidePassword = !hidePassword"
+                        [attr.aria-label]="'Hide password'" [attr.aria-pressed]="hidePassword">
+                        <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+                    </button>
+                    <mat-error *ngIf="password?.hasError('required')">
+                        Password is required
+                    </mat-error>
+                    <mat-error *ngIf="password?.hasError('minlength')">
+                        Password must be at least 6 characters
+                    </mat-error>
+                </mat-form-field>
+
+                <!-- Submit Button -->
+                <button mat-raised-button color="primary" class="full-width" type="submit"
+                    [disabled]="loginForm.invalid || isLoading">
+                    <span *ngIf="!isLoading">Sign In</span>
+                    <mat-spinner diameter="20" *ngIf="isLoading"></mat-spinner>
+                </button>
+
+                <!-- Register Link -->
+                <div class="register-link">
+                    <p>Don't have an account?
+                        <a routerLink="/auth/register" class="link">Register as Customer</a>
+                    </p>
+                </div>
+
+                <!-- Demo Credentials -->
+                <mat-expansion-panel class="demo-credentials">
+                    <mat-expansion-panel-header>
+                        <mat-panel-title>Demo Credentials</mat-panel-title>
+                    </mat-expansion-panel-header>
+
+                    <div class="demo-section">
+                        <h4>Admin Login:</h4>
+                        <p><strong>Email:</strong> admin@hotel.com</p>
+                        <p><strong>Password:</strong> password123</p>
+                        <p><strong>User Type:</strong> Staff/Admin</p>
+                    </div>
+
+                    <div class="demo-section">
+                        <h4>Staff Login:</h4>
+                        <p><strong>Email:</strong> staff@hotel.com</p>
+                        <p><strong>Password:</strong> password123</p>
+                        <p><strong>User Type:</strong> Staff/Admin</p>
+                    </div>
+
+                    <div class="demo-section">
+                        <h4>Customer Login:</h4>
+                        <p><strong>Email:</strong> customer@test.com</p>
+                        <p><strong>Password:</strong> password123</p>
+                        <p><strong>User Type:</strong> Customer</p>
+                    </div>
+                </mat-expansion-panel>
+            </form>
+        </mat-card-content>
+    </mat-card>
+</div>

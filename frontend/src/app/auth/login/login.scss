@@ -1,0 +1,114 @@
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 450px;
+  border-radius: 10px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+mat-card-header {
+  text-align: center;
+  display: block;
+  margin-bottom: 20px;
+}
+
+mat-card-title h2 {
+  margin: 0;
+  color: #333;
+  font-weight: 500;
+}
+
+mat-card-subtitle {
+  color: #666;
+  margin-top: 5px;
+}
+
+.user-type-toggle {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 25px;
+  
+  button {
+    flex: 1;
+    height: 45px;
+    font-weight: 500;
+  }
+}
+
+.full-width {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+mat-form-field {
+  margin-bottom: 15px;
+}
+
+button[type="submit"] {
+  height: 50px;
+  font-size: 16px;
+  font-weight: 500;
+  margin-top: 10px;
+  
+  mat-spinner {
+    margin: 0 auto;
+  }
+}
+
+.register-link {
+  text-align: center;
+  margin: 20px 0;
+  color: #666;
+  
+  .link {
+    color: #673ab7;
+    text-decoration: none;
+    font-weight: 500;
+    
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.demo-credentials {
+  margin-top: 20px;
+  
+  .demo-section {
+    margin-bottom: 15px;
+    
+    h4 {
+      margin: 0 0 5px 0;
+      color: #333;
+    }
+    
+    p {
+      margin: 2px 0;
+      color: #666;
+      font-size: 14px;
+    }
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 500px) {
+  .login-card {
+    padding: 15px;
+  }
+  
+  .user-type-toggle {
+    flex-direction: column;
+    
+    button {
+      width: 100%;
+    }
+  }
+}
