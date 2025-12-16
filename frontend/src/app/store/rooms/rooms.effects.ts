@@ -8,12 +8,11 @@ import { Room } from '../../models/room.model';
 
 @Injectable()
 export class RoomsEffects {
+  private actions$ = inject(Actions);
   private api = inject(ApiService);
-  
-  loadRooms$ = createEffect(() => {
-    const actions$ = inject(Actions);
-    
-    return actions$.pipe(
+
+  loadRooms$ = createEffect(() => 
+    this.actions$.pipe(
       ofType(RoomsActions.loadRooms),
       mergeMap((action) => {
         const filters = action.filters || {};
@@ -27,13 +26,11 @@ export class RoomsEffects {
           )
         );
       })
-    );
-  });
+    )
+  );
 
-  loadRoom$ = createEffect(() => {
-    const actions$ = inject(Actions);
-    
-    return actions$.pipe(
+  loadRoom$ = createEffect(() => 
+    this.actions$.pipe(
       ofType(RoomsActions.loadRoom),
       mergeMap(({ id }) =>
         this.api.get<{success: boolean, data: Room}>(`/rooms/${id}`).pipe(
@@ -45,13 +42,11 @@ export class RoomsEffects {
           )
         )
       )
-    );
-  });
+    )
+  );
 
-  createRoom$ = createEffect(() => {
-    const actions$ = inject(Actions);
-    
-    return actions$.pipe(
+  createRoom$ = createEffect(() => 
+    this.actions$.pipe(
       ofType(RoomsActions.createRoom),
       mergeMap(({ room }) =>
         this.api.post<{success: boolean, data: Room}>('/rooms', room).pipe(
@@ -63,13 +58,11 @@ export class RoomsEffects {
           )
         )
       )
-    );
-  });
+    )
+  );
 
-  updateRoom$ = createEffect(() => {
-    const actions$ = inject(Actions);
-    
-    return actions$.pipe(
+  updateRoom$ = createEffect(() => 
+    this.actions$.pipe(
       ofType(RoomsActions.updateRoom),
       mergeMap(({ id, room }) =>
         this.api.put<{success: boolean, data: Room}>(`/rooms/${id}`, room).pipe(
@@ -81,13 +74,11 @@ export class RoomsEffects {
           )
         )
       )
-    );
-  });
+    )
+  );
 
-  deleteRoom$ = createEffect(() => {
-    const actions$ = inject(Actions);
-    
-    return actions$.pipe(
+  deleteRoom$ = createEffect(() => 
+    this.actions$.pipe(
       ofType(RoomsActions.deleteRoom),
       mergeMap(({ id }) =>
         this.api.delete<{success: boolean}>(`/rooms/${id}`).pipe(
@@ -99,8 +90,6 @@ export class RoomsEffects {
           )
         )
       )
-    );
-  });
-
-  constructor() {}
+    )
+  );
 }

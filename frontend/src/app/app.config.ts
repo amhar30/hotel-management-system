@@ -1,4 +1,4 @@
-import { ApplicationConfig, provideZoneChangeDetection, isDevMode } from '@angular/core';
+import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
@@ -21,10 +21,6 @@ import { RoomsEffects } from './store/rooms/rooms.effects';
 import { BookingsEffects } from './store/bookings/bookings.effects';
 import { DashboardEffects } from './store/dashboard/dashboard.effects';
 
-// Import services
-import { ApiService } from './services/api.service';
-import { AuthService } from './services/auth.service';
-
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
@@ -33,10 +29,6 @@ export const appConfig: ApplicationConfig = {
     provideAnimations(),
     provideClientHydration(),
     
-    // Services
-    ApiService,
-    AuthService,
-    
     // NgRx Store
     provideStore({
       rooms: roomsReducer,
@@ -44,7 +36,7 @@ export const appConfig: ApplicationConfig = {
       dashboard: dashboardReducer
     }),
     
-    // NgRx Effects
+    // NgRx Effects - Make sure effects are provided
     provideEffects([RoomsEffects, BookingsEffects, DashboardEffects]),
     
     // NgRx DevTools

@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { of } from 'rxjs';
 import { map, mergeMap, catchError } from 'rxjs/operators';
@@ -7,7 +7,10 @@ import * as DashboardActions from './dashboard.actions';
 
 @Injectable()
 export class DashboardEffects {
-  loadDashboardStats$ = createEffect(() =>
+  private actions$ = inject(Actions);
+  private api = inject(ApiService);
+
+  loadDashboardStats$ = createEffect(() => 
     this.actions$.pipe(
       ofType(DashboardActions.loadDashboardStats),
       mergeMap(() =>
@@ -16,15 +19,15 @@ export class DashboardEffects {
             const data = response.data;
             return DashboardActions.loadDashboardStatsSuccess({
               stats: {
-                roomStats: data.room_stats,
-                bookingStats: data.booking_stats,
-                paymentStats: data.payment_stats,
-                customerStats: data.customer_stats,
-                todayStats: data.today_stats
+                roomStats: data?.room_stats,
+                bookingStats: data?.booking_stats,
+                paymentStats: data?.payment_stats,
+                customerStats: data?.customer_stats,
+                todayStats: data?.today_stats
               },
-              recentBookings: data.recent_bookings || [],
-              recentPayments: data.recent_payments || [],
-              recentCustomers: data.recent_customers || []
+              recentBookings: data?.recent_bookings || [],
+              recentPayments: data?.recent_payments || [],
+              recentCustomers: data?.recent_customers || []
             });
           }),
           catchError(error => 
@@ -35,7 +38,7 @@ export class DashboardEffects {
     )
   );
 
-  loadCustomerDashboardStats$ = createEffect(() =>
+  loadCustomerDashboardStats$ = createEffect(() => 
     this.actions$.pipe(
       ofType(DashboardActions.loadCustomerDashboardStats),
       mergeMap(() =>
@@ -44,15 +47,15 @@ export class DashboardEffects {
             const data = response.data;
             return DashboardActions.loadCustomerDashboardStatsSuccess({
               stats: {
-                roomStats: data.room_stats,
-                bookingStats: data.booking_stats,
-                paymentStats: data.payment_stats,
-                customerStats: data.customer_stats,
-                todayStats: data.today_stats
+                roomStats: data?.room_stats,
+                bookingStats: data?.booking_stats,
+                paymentStats: data?.payment_stats,
+                customerStats: data?.customer_stats,
+                todayStats: data?.today_stats
               },
-              upcomingBookings: data.upcoming_bookings || [],
-              recentBookings: data.recent_bookings || [],
-              currentStay: data.current_stay || null
+              upcomingBookings: data?.upcoming_bookings || [],
+              recentBookings: data?.recent_bookings || [],
+              currentStay: data?.current_stay || null
             });
           }),
           catchError(error => 
@@ -62,9 +65,4 @@ export class DashboardEffects {
       )
     )
   );
-
-  constructor(
-    private actions$: Actions,
-    private api: ApiService
-  ) {}
 }
