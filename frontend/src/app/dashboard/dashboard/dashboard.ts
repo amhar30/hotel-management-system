@@ -1,13 +1,24 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Observable } from 'rxjs'; // 💡 Observable සඳහා අවශ්‍යයි
+import { Store } from '@ngrx/store'; // 💡 NgRx State Management සඳහා අවශ්‍යයි
+
+// Material Imports
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatListModule } from '@angular/material/list';
-import { RouterModule, RouterOutlet } from '@angular/router';
-import { AuthService } from '../../services/auth.service';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatDividerModule } from '@angular/material/divider'; // 💡 Template එකේ mat-divider තිබූ නිසා එකතු කරන ලදී
+import { RouterModule, RouterOutlet } from '@angular/router';
+
+// Service Imports
+import { AuthService } from '../../services/auth.service';
+
+// NgRx Imports
+import { loadDashboardStats, loadCustomerDashboardStats } from '../../store/dashboard/dashboard.actions'; // 💡 Dashboard Actions
+import { selectDashboardStats, selectDashboardLoading } from '../../store/dashboard/dashboard.selectors'; // 💡 Dashboard Selectors
 
 
 @Component({
@@ -22,19 +33,17 @@ import { MatMenuModule } from '@angular/material/menu';
     MatButtonModule,
     MatListModule,
     RouterModule,
-    MatMenuModule    // 💡 Mat Menu, matMenuTriggerFor, සහ exportAs 'matMenu' දෝෂ නිරාකරණය කරයි
-    
+    MatMenuModule,
+    MatDividerModule // ✅ mat-divider සඳහා අවශ්‍යයි
   ],
   template: `
     <mat-sidenav-container class="sidenav-container">
-      <!-- Sidebar -->
       <mat-sidenav #sidenav mode="side" [opened]="sidebarOpen">
         <div class="sidebar-header">
           <h3>{{isAdmin ? 'Admin Panel' : 'My Account'}}</h3>
         </div>
         
         <mat-nav-list>
-          <!-- Admin/Staff Navigation -->
           <ng-container *ngIf="isAdmin">
             <a mat-list-item routerLink="/admin/dashboard" routerLinkActive="active">
               <mat-icon>dashboard</mat-icon>
@@ -62,7 +71,6 @@ import { MatMenuModule } from '@angular/material/menu';
             </a>
           </ng-container>
 
-          <!-- Customer Navigation -->
           <ng-container *ngIf="isCustomer">
             <a mat-list-item routerLink="/customer/dashboard" routerLinkActive="active">
               <mat-icon>dashboard</mat-icon>
@@ -78,7 +86,6 @@ import { MatMenuModule } from '@angular/material/menu';
             </a>
           </ng-container>
 
-          <!-- Common Navigation -->
           <mat-divider></mat-divider>
           <a mat-list-item (click)="logout()">
             <mat-icon>logout</mat-icon>
@@ -87,7 +94,6 @@ import { MatMenuModule } from '@angular/material/menu';
         </mat-nav-list>
       </mat-sidenav>
 
-      <!-- Main Content -->
       <mat-sidenav-content>
         <mat-toolbar color="primary">
           <button mat-icon-button (click)="toggleSidebar()">
@@ -114,6 +120,7 @@ import { MatMenuModule } from '@angular/material/menu';
     </mat-sidenav-container>
   `,
   styles: [`
+    /* ... CSS styles ... */
     .sidenav-container {
       height: 100vh;
     }
@@ -150,14 +157,39 @@ import { MatMenuModule } from '@angular/material/menu';
     }
   `]
 })
-export class DashboardComponent {
+export class DashboardComponent implements OnInit { // ✅ OnInit implements කරන ලදී
   isAdmin = false;
   isCustomer = false;
   sidebarOpen = true;
+  
+  // ✅ NgRx Properties එකතු කරන ලදී
+  stats$: Observable<any>;
+  loading$: Observable<boolean>;
 
-  constructor(private authService: AuthService) {
+  constructor(
+    private authService: AuthService,
+    private store: Store // ✅ Store එක Inject කරන ලදී
+  ) {
     this.isAdmin = this.authService.isAdmin() || this.authService.isStaff();
     this.isCustomer = this.authService.isCustomer();
+    
+    // ✅ Selectors මඟින් State එකට subscribe කරන ලදී
+    this.stats$ = this.store.select(selectDashboardStats);
+    this.loading$ = this.store.select(selectDashboardLoading);
+  }
+
+  ngOnInit() { // ✅ ngOnInit එකතු කරන ලදී
+    if (this.isAdmin || this.isStaff()) {
+      // 💡 Admin හෝ Staff නම් Admin Stats Load කරන්න
+      this.store.dispatch(loadDashboardStats());
+    } else if (this.isCustomer) {
+      // 💡 Customer නම් Customer Stats Load කරන්න
+      this.store.dispatch(loadCustomerDashboardStats());
+    }
+  }
+
+  isStaff(): boolean { // ✅ isStaff() method එක එකතු කරන ලදී
+    return this.authService.isStaff();
   }
 
   toggleSidebar() {

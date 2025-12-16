@@ -1,7 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Store } from '@ngrx/store';
+import { Observable, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { MatCardModule } from '@angular/material/card';
-import { MatTableModule } from '@angular/material/table';
+import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -13,9 +16,17 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { ApiService } from '../../services/api.service';
 import { Room } from '../../models/room.model';
-// import { RoomFormComponent } from '../room-form/room-form';
+import { 
+  loadRooms, 
+  updateRoomFilters,
+  deleteRoom 
+} from '../../store/rooms/rooms.actions';
+import { 
+  selectFilteredRooms, 
+  selectRoomsLoading,
+  selectRoomFilters 
+} from '../../store/rooms/rooms.selectors';
 
 @Component({
   selector: 'app-rooms-list',
@@ -84,65 +95,14 @@ import { Room } from '../../models/room.model';
             </div>
           </form>
 
-          <!-- Stats Cards -->
-          <div class="stats-cards" *ngIf="roomStats">
-            <mat-card class="stat-card">
-              <mat-card-content>
-                <div class="stat-content">
-                  <mat-icon color="primary">meeting_room</mat-icon>
-                  <div>
-                    <h3>{{roomStats.total}}</h3>
-                    <p>Total Rooms</p>
-                  </div>
-                </div>
-              </mat-card-content>
-            </mat-card>
-
-            <mat-card class="stat-card">
-              <mat-card-content>
-                <div class="stat-content">
-                  <mat-icon color="accent">check_circle</mat-icon>
-                  <div>
-                    <h3>{{roomStats.available}}</h3>
-                    <p>Available</p>
-                  </div>
-                </div>
-              </mat-card-content>
-            </mat-card>
-
-            <mat-card class="stat-card">
-              <mat-card-content>
-                <div class="stat-content">
-                  <mat-icon color="warn">event_busy</mat-icon>
-                  <div>
-                    <h3>{{roomStats.booked}}</h3>
-                    <p>Booked</p>
-                  </div>
-                </div>
-              </mat-card-content>
-            </mat-card>
-
-            <mat-card class="stat-card">
-              <mat-card-content>
-                <div class="stat-content">
-                  <mat-icon color="warn">build</mat-icon>
-                  <div>
-                    <h3>{{roomStats.maintenance}}</h3>
-                    <p>Maintenance</p>
-                  </div>
-                </div>
-              </mat-card-content>
-            </mat-card>
-          </div>
-
           <!-- Loading Spinner -->
-          <div class="loading-spinner" *ngIf="isLoading">
+          <div class="loading-spinner" *ngIf="loading$ | async">
             <mat-spinner diameter="40"></mat-spinner>
           </div>
 
           <!-- Rooms Table -->
-          <div class="table-container" *ngIf="!isLoading">
-            <table mat-table [dataSource]="rooms" class="mat-elevation-z8">
+          <div class="table-container" *ngIf="!(loading$ | async)">
+            <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
               
               <!-- Room Number Column -->
               <ng-container matColumnDef="room_number">
@@ -224,7 +184,7 @@ import { Room } from '../../models/room.model';
             </table>
 
             <!-- Empty State -->
-            <div class="empty-state" *ngIf="rooms.length === 0 && !isLoading">
+            <div class="empty-state" *ngIf="dataSource.data.length === 0 && !(loading$ | async)">
               <mat-icon>meeting_room</mat-icon>
               <h3>No rooms found</h3>
               <p>Try changing your filters or add new rooms.</p>
@@ -259,41 +219,6 @@ import { Room } from '../../models/room.model';
     
     .filter-field {
       min-width: 200px;
-    }
-    
-    .stats-cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 20px;
-      margin-bottom: 30px;
-    }
-    
-    .stat-card {
-      height: 100%;
-    }
-    
-    .stat-content {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
-    
-    .stat-content mat-icon {
-      font-size: 40px;
-      height: 40px;
-      width: 40px;
-    }
-    
-    .stat-content h3 {
-      margin: 0;
-      font-size: 24px;
-      font-weight: 500;
-    }
-    
-    .stat-content p {
-      margin: 5px 0 0 0;
-      color: #666;
-      font-size: 14px;
     }
     
     .table-container {
@@ -374,15 +299,18 @@ import { Room } from '../../models/room.model';
     }
   `]
 })
-export class RoomsListComponent implements OnInit {
-  rooms: Room[] = [];
-  isLoading = false;
-  roomStats: any = null;
-  displayedColumns: string[] = ['room_number', 'type', 'price', 'capacity', 'status', 'amenities', 'actions'];
+export class RoomsListComponent implements OnInit, OnDestroy {
   filterForm: FormGroup;
+  displayedColumns: string[] = ['room_number', 'type', 'price', 'capacity', 'status', 'amenities', 'actions'];
+  
+  filteredRooms$: Observable<Room[]>;
+  loading$: Observable<boolean>;
+  dataSource = new MatTableDataSource<Room>([]);
+  
+  private destroy$ = new Subject<void>();
 
   constructor(
-    private api: ApiService,
+    private store: Store,
     private fb: FormBuilder,
     private dialog: MatDialog
   ) {
@@ -391,49 +319,53 @@ export class RoomsListComponent implements OnInit {
       type: [''],
       search: ['']
     });
+
+    this.filteredRooms$ = this.store.select(selectFilteredRooms);
+    this.loading$ = this.store.select(selectRoomsLoading);
   }
 
   ngOnInit() {
-    this.loadRooms();
-    this.loadRoomStatistics();
-  }
-
-  loadRooms() {
-    this.isLoading = true;
-    const filters = this.filterForm.value;
+    // Load initial rooms
+    this.store.dispatch(loadRooms({}));
     
-    this.api.get<{success: boolean, data: any}>('/rooms', filters).subscribe({
-      next: (response) => {
-        this.rooms = response.data?.data || response.data || [];
-        this.isLoading = false;
-      },
-      error: (error) => {
-        console.error('Error loading rooms:', error);
-        this.isLoading = false;
-      }
-    });
+    // Subscribe to filtered rooms and update data source
+    this.filteredRooms$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(rooms => {
+        this.dataSource.data = rooms || [];
+      });
+    
+    // Subscribe to filter changes
+    this.filterForm.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(filters => {
+        this.store.dispatch(updateRoomFilters({ filters }));
+      });
+    
+    // Load initial filters from store
+    this.store.select(selectRoomFilters)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(filters => {
+        this.filterForm.patchValue(filters, { emitEvent: false });
+      });
   }
 
-  loadRoomStatistics() {
-    this.api.get<{success: boolean, data: any}>('/rooms/statistics').subscribe({
-      next: (response) => {
-        if (response.success) {
-          this.roomStats = response.data;
-        }
-      },
-      error: (error) => {
-        console.error('Error loading room statistics:', error);
-      }
-    });
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   applyFilters() {
-    this.loadRooms();
+    const filters = this.filterForm.value;
+    this.store.dispatch(updateRoomFilters({ filters }));
+    this.store.dispatch(loadRooms({ filters }));
   }
 
   clearFilters() {
     this.filterForm.reset();
-    this.loadRooms();
+    const emptyFilters = { status: '', type: '', search: '' };
+    this.store.dispatch(updateRoomFilters({ filters: emptyFilters }));
+    this.store.dispatch(loadRooms({}));
   }
 
   getTypeColor(type: string): any {
@@ -447,17 +379,16 @@ export class RoomsListComponent implements OnInit {
   }
 
   addRoom() {
-    // TODO: Implement add room dialog
     console.log('Add room clicked');
   }
 
   editRoom(room: Room) {
-    // TODO: Implement edit room dialog
     console.log('Edit room:', room.id);
   }
 
   deleteRoom(room: Room) {
-    // TODO: Implement delete room with confirmation
-    console.log('Delete room:', room.id);
+    if (confirm(`Are you sure you want to delete room ${room.room_number}?`)) {
+      this.store.dispatch(deleteRoom({ id: room.id }));
+    }
   }
 }

@@ -1,7 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Store } from '@ngrx/store';
+import { Observable, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { MatCardModule } from '@angular/material/card';
-import { MatTableModule } from '@angular/material/table';
+import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -12,9 +15,20 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { ApiService } from '../../services/api.service';
-import { Booking } from '../../models/booking.model';
 import { RouterModule } from '@angular/router';
+import { Booking } from '../../models/booking.model';
+import { 
+  loadBookings, 
+  updateBookingFilters,
+  updateBookingStatus,
+  cancelBooking 
+} from '../../store/bookings/bookings.actions';
+import { 
+  selectAllBookings, 
+  selectBookingsLoading,
+  selectFilteredBookings,
+  selectBookingFilters 
+} from '../../store/bookings/bookings.selectors';
 
 @Component({
   selector: 'app-bookings-list',
@@ -22,6 +36,7 @@ import { RouterModule } from '@angular/router';
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    RouterModule,
     MatCardModule,
     MatTableModule,
     MatButtonModule,
@@ -32,8 +47,7 @@ import { RouterModule } from '@angular/router';
     MatDatepickerModule,
     MatNativeDateModule,
     MatPaginatorModule,
-    MatProgressSpinnerModule,
-    RouterModule
+    MatProgressSpinnerModule
   ],
   template: `
     <div class="container">
@@ -76,13 +90,13 @@ import { RouterModule } from '@angular/router';
           </form>
 
           <!-- Loading Spinner -->
-          <div class="loading-spinner" *ngIf="isLoading">
+          <div class="loading-spinner" *ngIf="loading$ | async">
             <mat-spinner diameter="40"></mat-spinner>
           </div>
 
           <!-- Bookings Table -->
-          <div class="table-container" *ngIf="!isLoading">
-            <table mat-table [dataSource]="bookings" class="mat-elevation-z8">
+          <div class="table-container" *ngIf="!(loading$ | async)">
+            <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
               
               <!-- ID Column -->
               <ng-container matColumnDef="id">
@@ -147,7 +161,7 @@ import { RouterModule } from '@angular/router';
             </table>
 
             <!-- Empty State -->
-            <div class="empty-state" *ngIf="bookings.length === 0 && !isLoading">
+            <div class="empty-state" *ngIf="dataSource.data.length === 0 && !(loading$ | async)">
               <mat-icon>event_busy</mat-icon>
               <h3>No bookings found</h3>
               <p>Try changing your filters or check back later.</p>
@@ -257,14 +271,18 @@ import { RouterModule } from '@angular/router';
     }
   `]
 })
-export class BookingsListComponent implements OnInit {
-  bookings: Booking[] = [];
-  isLoading = false;
-  displayedColumns: string[] = ['id', 'customer', 'room', 'dates', 'amount', 'status', 'actions'];
+export class BookingsListComponent implements OnInit, OnDestroy {
   filterForm: FormGroup;
+  displayedColumns: string[] = ['id', 'customer', 'room', 'dates', 'amount', 'status', 'actions'];
+  
+  filteredBookings$: Observable<Booking[]>;
+  loading$: Observable<boolean>;
+  dataSource = new MatTableDataSource<Booking>([]);
+  
+  private destroy$ = new Subject<void>();
 
   constructor(
-    private api: ApiService,
+    private store: Store,
     private fb: FormBuilder
   ) {
     this.filterForm = this.fb.group({
@@ -273,44 +291,67 @@ export class BookingsListComponent implements OnInit {
       from_date: [''],
       to_date: ['']
     });
+
+    this.filteredBookings$ = this.store.select(selectFilteredBookings);
+    this.loading$ = this.store.select(selectBookingsLoading);
   }
 
   ngOnInit() {
-    this.loadBookings();
+    // Load initial bookings
+    this.store.dispatch(loadBookings({}));
+    
+    // Subscribe to filtered bookings and update data source
+    this.filteredBookings$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(bookings => {
+        this.dataSource.data = bookings || [];
+      });
+    
+    // Subscribe to filter changes
+    this.filterForm.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(filters => {
+        this.store.dispatch(updateBookingFilters({ filters }));
+      });
+    
+    // Load initial filters from store
+    this.store.select(selectBookingFilters)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(filters => {
+        this.filterForm.patchValue(filters, { emitEvent: false });
+      });
   }
 
-  loadBookings() {
-    this.isLoading = true;
-    const filters = this.filterForm.value;
-    
-    this.api.get<{success: boolean, data: any}>('/bookings', filters).subscribe({
-      next: (response) => {
-        this.bookings = response.data?.data || response.data || [];
-        this.isLoading = false;
-      },
-      error: (error) => {
-        console.error('Error loading bookings:', error);
-        this.isLoading = false;
-      }
-    });
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   applyFilters() {
-    this.loadBookings();
+    const filters = this.filterForm.value;
+    this.store.dispatch(updateBookingFilters({ filters }));
+    this.store.dispatch(loadBookings({ filters }));
   }
 
   clearFilters() {
     this.filterForm.reset();
-    this.loadBookings();
+    const emptyFilters = { status: '', search: '', from_date: '', to_date: '' };
+    this.store.dispatch(updateBookingFilters({ filters: emptyFilters }));
+    this.store.dispatch(loadBookings({}));
   }
 
   confirmBooking(booking: Booking) {
-    // TODO: Implement confirm booking
-    console.log('Confirm booking:', booking.id);
+    if (confirm(`Confirm booking #${booking.id}?`)) {
+      this.store.dispatch(updateBookingStatus({ 
+        id: booking.id, 
+        status: 'confirmed' 
+      }));
+    }
   }
 
   cancelBooking(booking: Booking) {
-    // TODO: Implement cancel booking
-    console.log('Cancel booking:', booking.id);
+    if (confirm(`Cancel booking #${booking.id}?`)) {
+      this.store.dispatch(cancelBooking({ id: booking.id }));
+    }
   }
 }

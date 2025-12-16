@@ -1,7 +1,7 @@
 import { createAction, props } from '@ngrx/store';
 import { Room } from '../../models/room.model';
 
-// Load Rooms
+// --- Load Rooms (List) ---
 export const loadRooms = createAction(
   '[Rooms] Load Rooms',
   props<{ filters?: any }>()
@@ -17,7 +17,7 @@ export const loadRoomsFailure = createAction(
   props<{ error: string }>()
 );
 
-// Load Single Room
+// --- Load Single Room (Detail) ---
 export const loadRoom = createAction(
   '[Rooms] Load Room',
   props<{ id: number }>()
@@ -33,7 +33,7 @@ export const loadRoomFailure = createAction(
   props<{ error: string }>()
 );
 
-// Create Room
+// --- Create Room ---
 export const createRoom = createAction(
   '[Rooms] Create Room',
   props<{ room: Omit<Room, 'id'> }>()
@@ -49,7 +49,7 @@ export const createRoomFailure = createAction(
   props<{ error: string }>()
 );
 
-// Update Room
+// --- Update Room ---
 export const updateRoom = createAction(
   '[Rooms] Update Room',
   props<{ id: number; room: Partial<Room> }>()
@@ -65,7 +65,7 @@ export const updateRoomFailure = createAction(
   props<{ error: string }>()
 );
 
-// Delete Room
+// --- Delete Room ---
 export const deleteRoom = createAction(
   '[Rooms] Delete Room',
   props<{ id: number }>()
@@ -81,13 +81,12 @@ export const deleteRoomFailure = createAction(
   props<{ error: string }>()
 );
 
-// Update Filters
+// --- UI/Filter Actions ---
 export const updateRoomFilters = createAction(
   '[Rooms] Update Filters',
   props<{ filters: any }>()
 );
 
-// Clear Selected Room
 export const clearSelectedRoom = createAction(
   '[Rooms] Clear Selected Room'
 );
