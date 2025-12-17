@@ -1,0 +1,13 @@
+.git
+.gitignore
+Dockerfile
+docker-compose.yml
+.env
+node_modules
+.env.production
+.env.local
+/storage/*.key
+vendor
+composer.lock
+npm-debug.log
+yarn-error.log

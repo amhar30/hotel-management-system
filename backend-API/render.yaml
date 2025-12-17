@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: hotel-backend
+    runtime: docker
+    repo: https://github.com/amhar30/hotel-management-system
+    region: oregon # or singapore if you're in Asia
+    branch: main
+    plan: free
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: LOG_CHANNEL
+        value: stderr
+    buildFilter:
+      paths:
+        - backend/**
