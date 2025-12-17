@@ -127,7 +127,7 @@ import {
               <!-- Amount Column -->
               <ng-container matColumnDef="amount">
                 <th mat-header-cell *matHeaderCellDef>Amount</th>
-                <td mat-cell *matCellDef="let booking">₹{{booking.total_amount}}</td>
+                <td mat-cell *matCellDef="let booking">LKR {{booking.total_amount}}</td>
               </ng-container>
 
               <!-- Status Column -->

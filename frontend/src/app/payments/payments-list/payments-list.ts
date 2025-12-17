@@ -112,7 +112,7 @@ interface Payment {
                 <div class="stat-content">
                   <mat-icon color="primary">payments</mat-icon>
                   <div>
-                    <h3>₹{{paymentStats.total_revenue | number}}</h3>
+                    <h3>LKR {{paymentStats.total_revenue | number}}</h3>
                     <p>Total Revenue</p>
                   </div>
                 </div>
@@ -124,7 +124,7 @@ interface Payment {
                 <div class="stat-content">
                   <mat-icon color="accent">today</mat-icon>
                   <div>
-                    <h3>₹{{paymentStats.today_revenue | number}}</h3>
+                    <h3>LKR {{paymentStats.today_revenue | number}}</h3>
                     <p>Today's Revenue</p>
                   </div>
                 </div>
@@ -172,7 +172,7 @@ interface Payment {
               <ng-container matColumnDef="amount">
                 <th mat-header-cell *matHeaderCellDef>Amount</th>
                 <td mat-cell *matCellDef="let payment">
-                  <strong>₹{{payment.amount}}</strong>
+                  <strong>LKR {{payment.amount}}</strong>
                 </td>
               </ng-container>
 

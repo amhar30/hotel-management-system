@@ -80,7 +80,7 @@ import { RouterModule } from '@angular/router';
                   <div class="summary-content">
                     <mat-icon color="primary">trending_up</mat-icon>
                     <div>
-                      <h3>₹{{revenueStats?.total_revenue || 0 | number}}</h3>
+                      <h3>LKR {{revenueStats?.total_revenue || 0 | number}}</h3>
                       <p>Total Revenue</p>
                     </div>
                   </div>
@@ -92,7 +92,7 @@ import { RouterModule } from '@angular/router';
                   <div class="summary-content">
                     <mat-icon color="accent">today</mat-icon>
                     <div>
-                      <h3>₹{{revenueStats?.today_revenue || 0 | number}}</h3>
+                      <h3>LKR {{revenueStats?.today_revenue || 0 | number}}</h3>
                       <p>Today's Revenue</p>
                     </div>
                   </div>
@@ -127,7 +127,7 @@ import { RouterModule } from '@angular/router';
                   <tbody>
                     <tr *ngFor="let item of reportData">
                       <td>{{getPeriodLabel(item)}}</td>
-                      <td>₹{{item.revenue || 0 | number}}</td>
+                      <td>LKR {{item.revenue || 0 | number}}</td>
                       <td>{{item.bookings || 0}}</td>
                       <td *ngIf="selectedPeriod === 'monthly'">{{item.occupancy_rate || 0}}%</td>
                     </tr>
@@ -227,7 +227,7 @@ import { RouterModule } from '@angular/router';
                   <div class="summary-content">
                     <mat-icon color="primary">room_service</mat-icon>
                     <div>
-                      <h3>₹{{serviceStats?.total_service_revenue || 0 | number}}</h3>
+                      <h3>LKR {{serviceStats?.total_service_revenue || 0 | number}}</h3>
                       <p>Total Service Revenue</p>
                     </div>
                   </div>

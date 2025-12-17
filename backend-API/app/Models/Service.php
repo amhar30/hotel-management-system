@@ -29,7 +29,7 @@ class Service extends Model
     public function getFormattedPriceAttribute()
     {
         // $this->attributes['price'] භාවිතා කරන්න
-        return '₹' . number_format($this->attributes['price'], 2);
+        return 'LKR ' . number_format($this->attributes['price'], 2);
     }
 
     // -----------------------------------------------------------------------

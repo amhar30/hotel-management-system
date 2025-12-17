@@ -106,7 +106,7 @@ import { RouterModule } from '@angular/router';
               <!-- Total Spent Column -->
               <ng-container matColumnDef="total_spent">
                 <th mat-header-cell *matHeaderCellDef>Total Spent</th>
-                <td mat-cell *matCellDef="let customer">₹{{customer.total_spent || 0}}</td>
+                <td mat-cell *matCellDef="let customer">LKR {{customer.total_spent || 0}}</td>
               </ng-container>
 
               <!-- Member Since Column -->

@@ -48,7 +48,7 @@ class Payment extends Model
     // Get formatted amount
     public function getFormattedAmountAttribute()
     {
-        return '₹' . number_format($this->amount, 2);
+        return 'LKR' . number_format($this->amount, 2);
     }
 
     // Relationships

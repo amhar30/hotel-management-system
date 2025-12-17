@@ -127,7 +127,7 @@ import {
               <!-- Price Column -->
               <ng-container matColumnDef="price">
                 <th mat-header-cell *matHeaderCellDef>Price/Night</th>
-                <td mat-cell *matCellDef="let room">₹{{room.price_per_night}}</td>
+                <td mat-cell *matCellDef="let room">LKR {{room.price_per_night}}</td>
               </ng-container>
 
               <!-- Capacity Column -->

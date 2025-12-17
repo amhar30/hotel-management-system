@@ -77,7 +77,7 @@ class Room extends Model
     // Get formatted price
     public function getFormattedPriceAttribute()
     {
-        return '₹' . number_format($this->attributes['price_per_night'], 2);
+        return 'LKR ' . number_format($this->attributes['price_per_night'], 2);
     }
 
     // Get room type label
