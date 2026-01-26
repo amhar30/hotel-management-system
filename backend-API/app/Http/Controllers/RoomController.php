@@ -11,6 +11,20 @@ class RoomController extends Controller
     // Get all rooms (with filters)
     public function index(Request $request)
     {
+        if ($request->has('AvailableRooms')) {
+            return response()->json([
+                'success' => true,
+                'data' => $this->availableRooms($request)
+            ]);
+        } elseif ($request->has('statistics')) {
+            return response()->json([
+                'success' => true,
+                'data' => $this->statistics()
+            ]);
+
+        }
+
+
         $query = Room::query();
 
         // Filter by status
@@ -193,9 +207,7 @@ class RoomController extends Controller
     // Get available rooms for booking
     public function availableRooms(Request $request)
     {
-        $rooms = Room::where('status', 'available')
-            ->orderBy('room_number')
-            ->get();
+        $rooms = Room::where('status', 'available')->orderBy('room_number')->get();
 
         return response()->json([
             'success' => true,

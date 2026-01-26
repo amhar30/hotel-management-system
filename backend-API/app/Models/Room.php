@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-// 💡 ඔබට Booking::class භාවිතා කිරීමට මෙය අවශ්‍ය විය හැකිය
+//  ඔබට Booking::class භාවිතා කිරීමට මෙය අවශ්‍ය විය හැකිය
 use App\Models\Booking;
 
 class Room extends Model
@@ -34,7 +34,7 @@ class Room extends Model
      */
     public function bookings()
     {
-        // 💡 Room එකකට බොහෝ Bookings තිබිය හැක
+        //  Room එකකට බොහෝ Bookings තිබිය හැක
         return $this->hasMany(Booking::class);
     }
     // ----------------------------

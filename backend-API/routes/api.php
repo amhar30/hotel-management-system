@@ -10,103 +10,67 @@ use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 
-// ----------------------------------------------------------------------------------
-// 🛡️ Public Routes (සත්‍යාපනයකින් තොරව ප්‍රවේශ විය හැකි Routes)
-// ----------------------------------------------------------------------------------
-
+// public route
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 
-// Room public routes
-Route::get('/public/rooms', [RoomController::class, 'index']);
-Route::get('/public/rooms/{id}', [RoomController::class, 'show']);
+Route::prefix('public')->group(function () {
+    Route::resource('services', ServiceController::class)->only(['index', 'show']);
+    Route::resource('rooms', RoomController::class)->only(['index', 'show']);
+});
 
-// Service public routes
-Route::get('/public/services', [ServiceController::class, 'index']);
-Route::get('/public/services/{id}', [ServiceController::class, 'show']);
-
-
-// ----------------------------------------------------------------------------------
-// 🔑 Protected Routes (සත්‍යාපනය වූ පරිශීලකයින් සඳහා පමණි - auth:sanctum)
-// ----------------------------------------------------------------------------------
-
+// logged only routes
 Route::middleware('auth:sanctum')->group(function () {
 
-    // Auth Routes
+
+    //auth
     Route::get('/user', [AuthController::class, 'user']);
     Route::post('/logout', [AuthController::class, 'logout']);
 
-    // --- Room Routes ---
-    Route::get('/rooms/available', [RoomController::class, 'availableRooms']);
-    Route::get('/rooms/statistics', [RoomController::class, 'statistics']);
-    Route::apiResource('rooms', RoomController::class)->except(['store', 'update', 'destroy']);
 
-    // Admin-only room routes
+    //rooms
+    Route::resource('rooms', RoomController::class)->except(['store', 'update', 'destroy']);
+
+    // rooms(admin only)
     Route::middleware('admin')->group(function () {
-        Route::post('/rooms', [RoomController::class, 'store']);
-        Route::put('/rooms/{room}', [RoomController::class, 'update']);
-        Route::delete('/rooms/{room}', [RoomController::class, 'destroy']);
+        Route::resource('rooms', RoomController::class)->only(['store', 'update', 'destroy']);
     });
 
-    // --- Service Routes ---
-    Route::get('/services/available', [ServiceController::class, 'availableServices']);
-    Route::get('/services/statistics', [ServiceController::class, 'statistics']);
-    Route::apiResource('services', ServiceController::class)->except(['store', 'update', 'destroy']);
+    //services
+    Route::resource('services', ServiceController::class)->except(['store', 'update', 'destroy']);
 
-    // Admin/staff service routes
+    // service (Admin/staff )
     Route::middleware(['admin_or_staff'])->group(function () {
-        Route::post('/services', [ServiceController::class, 'store']);
-        Route::put('/services/{service}', [ServiceController::class, 'update']);
-        Route::delete('/services/{service}', [ServiceController::class, 'destroy']);
+        Route::resource('/services', (ServiceController::class))->only(['update']);
+    });
+    // service (admin only)
+    Route::middleware(['admin'])->group(function () {
+        Route::resource('/services', (ServiceController::class))->only(['store', 'destroy']);
     });
 
-    // ----------------------------------------------------------------------------------
-    // 👤 Customer Routes
-    // ----------------------------------------------------------------------------------
-
-    // Customer profile (තමන්ගේ දත්ත)
+    // Customer Routes
     Route::get('/customer/profile', [CustomerController::class, 'show']);
     Route::put('/customer/profile', [CustomerController::class, 'update']);
     Route::get('/customer/bookings', [CustomerController::class, 'bookingHistory']);
 
-    // Admin/staff customer management (වෙනත් පාරිභෝගිකයින්ගේ දත්ත)
+    // customer Routes(Admin/staff only) 
     Route::middleware(['admin_or_staff'])->group(function () {
-
-        // 1. 'statistics' route එක ඉහළින් තබා ඇත
-        Route::get('/customers/statistics', [CustomerController::class, 'statistics']);
-
-        // 2. Index route එක
-        Route::get('/customers', [CustomerController::class, 'index']);
-
-        // 3. Wildcard routes පහළින් තබා ඇත
-        Route::get('/customers/{id}', [CustomerController::class, 'show']);
-        Route::get('/customers/{id}/bookings', [CustomerController::class, 'bookingHistory']);
+        Route::resource('customers', CustomerController::class)->except(['update', 'store']);
     });
 
-    // ----------------------------------------------------------------------------------
-    // 📅 Booking Routes
-    // ----------------------------------------------------------------------------------
+    //  Booking Routes
+    Route::resource('bookings', BookingController::class)->except(['updateStatus']);
 
-    Route::get('/bookings/availability', [BookingController::class, 'checkAvailability']);
-    Route::get('/bookings/statistics', [BookingController::class, 'statistics']);
-    Route::post('/bookings/{id}/cancel', [BookingController::class, 'cancel']);
-
-    // Bookings CRUD (පරිශීලකයාට තමන්ගේ Bookings කළමනාකරණය කිරීමට)
-    Route::apiResource('bookings', BookingController::class);
-
-    // Admin/staff booking management (Booking status යාවත්කාලීන කිරීමට)
+    //  booking Admin/staff
     Route::middleware(['admin_or_staff'])->group(function () {
         Route::put('/bookings/{id}/status', [BookingController::class, 'updateStatus']);
     });
 
-    // ----------------------------------------------------------------------------------
-    // 💰 Payment Routes
-    // ----------------------------------------------------------------------------------
-
+    //  Payment Routes
     Route::get('/payments/statistics', [PaymentController::class, 'statistics']);
     Route::get('/bookings/{bookingId}/payment', [PaymentController::class, 'getByBooking']);
 
-    // Payment creation (customer can create, staff can create for cash)
+    // Payment creation 
     Route::post('/payments', [PaymentController::class, 'store']);
 
     // Admin/staff payment management
@@ -115,13 +79,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/payments/{payment}/process', [PaymentController::class, 'processPayment']);
     });
 
-    // Customer payment processing (online only)
+    // Customer payment processing
     Route::post('/payments/{payment}/pay-online', [PaymentController::class, 'processPayment']);
 
-    // ----------------------------------------------------------------------------------
-    // 🚪 Check-in/out Routes
-    // ----------------------------------------------------------------------------------
-
+    // Check-in/out Routes
     Route::get('/bookings/{bookingId}/qr', [CheckInOutController::class, 'getQrCode']);
 
     // Admin/staff check-in/out management
@@ -132,10 +93,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/checkinout/manual', [CheckInOutController::class, 'manualCheck']);
     });
 
-    // ----------------------------------------------------------------------------------
-    // 📊 Dashboard and Reports Routes (NEW)
-    // ----------------------------------------------------------------------------------
-
+    // Dashboard and Reports Routes (NEW)
     // Main dashboard
     Route::get('/dashboard/statistics', [DashboardController::class, 'statistics']);
 

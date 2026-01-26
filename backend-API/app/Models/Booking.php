@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-// 💡 අවශ්‍ය Models මෙහිදී import කර ඇත
 use App\Models\Customer;
 use App\Models\Room;
 use App\Models\Service;
@@ -63,9 +62,9 @@ class Booking extends Model
         return $this->status === 'checked_in';
     }
 
-    // -----------------------------------------------------------------------
-    // 🔗 Relationships
-    // -----------------------------------------------------------------------
+
+    //  Relationships
+
 
     public function customer()
     {
@@ -94,38 +93,31 @@ class Booking extends Model
         return $this->hasOne(CheckInOut::class);
     }
 
-    // -----------------------------------------------------------------------
     // 🔑 New Helper Methods
-    // -----------------------------------------------------------------------
 
-    /**
-     * Check if booking has a payment record attached.
-     */
+    //Check if booking has a payment record attached.
+
     public function hasPayment()
     {
         return $this->payment()->exists();
     }
 
-    /**
-     * Check if the attached payment is marked as paid.
-     * Assumes Payment model has an isPaid() method.
-     */
+    // Check if the attached payment is marked as paid.
+    //Assumes Payment model has an isPaid() method.
+
     public function isPaid()
     {
         return $this->payment && $this->payment->isPaid();
     }
 
-    /**
-     * Check if the booking has a QR code/CheckInOut record.
-     */
+    // Check if the booking has a QR code/CheckInOut record.
+
     public function hasQrCode()
     {
         return $this->checkInOut()->exists();
     }
 
-    /**
-     * Generate a new payment record for the booking.
-     */
+    // Generate a new payment record for the booking.
     public function generatePayment($method = 'cash')
     {
         // 💡 Payment Model එකේ create method එක භාවිතා කරයි
@@ -137,9 +129,7 @@ class Booking extends Model
         ]);
     }
 
-    /**
-     * Generate a unique QR code and secret for check-in/out.
-     */
+    // Generate a unique QR code and secret for check-in/out.
     public function generateQrCode()
     {
         // Generate unique QR code and secret
@@ -154,9 +144,7 @@ class Booking extends Model
         ]);
     }
 
-    // -----------------------------------------------------------------------
-    // 🔍 Scope for available dates
-    // -----------------------------------------------------------------------
+    //  Scope for available dates
 
     public function scopeForRoom($query, $roomId, $checkIn, $checkOut)
     {

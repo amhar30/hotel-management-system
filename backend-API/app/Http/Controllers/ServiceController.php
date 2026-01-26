@@ -11,6 +11,20 @@ class ServiceController extends Controller
     // Get all services
     public function index(Request $request)
     {
+        if ($request->has('AvailableServices')) {
+            return response()->json([
+                'success' => true,
+                'data' => $this->availableServices()
+            ]);
+        } elseif ($request->has('statistics')) {
+            return response()->json([
+                'success' => true,
+                'data' => $this->statistics()
+            ]);
+
+        }
+
+
         $query = Service::query();
 
         // Filter by type
@@ -173,13 +187,11 @@ class ServiceController extends Controller
     // Get available services
     public function availableServices()
     {
-        $services = Service::where('is_available', true)
-            ->orderBy('name')
-            ->get();
+
 
         return response()->json([
             'success' => true,
-            'data' => $services
+            'data' => Service::where('is_available', 1)->orderBy('name')->get()
         ]);
     }
 
@@ -187,7 +199,7 @@ class ServiceController extends Controller
     public function statistics()
     {
         $total = Service::count();
-        $available = Service::where('is_available', true)->count();
+        $available = Service::where('is_available', 1)->count();
         $types = Service::select('type')
             ->selectRaw('COUNT(*) as count')
             ->groupBy('type')

@@ -4,10 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-// 💡 අවශ්‍ය Models මෙහිදී use කර ඇත
 use App\Models\Booking;
-use App\Models\BookingService; // Pivot Model එක සඳහා
-
+use App\Models\BookingService;
 class Service extends Model
 {
     use HasFactory;
@@ -33,7 +31,7 @@ class Service extends Model
     }
 
     // -----------------------------------------------------------------------
-    // 🔗 Relationships
+    //  Relationships
     // -----------------------------------------------------------------------
 
     /**

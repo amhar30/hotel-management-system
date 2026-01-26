@@ -16,12 +16,36 @@ class BookingController extends Controller
     // Get all bookings with filters
     public function index(Request $request)
     {
+        if ($request->has('checkAvailability')) {
+            return response()->json([
+                'success' => true,
+                'data' => $this->checkAvailability($request)
+            ]);
+        } elseif ($request->has('statistics')) {
+            return response()->json([
+                'success' => true,
+                'data' => $this->statistics($request)
+            ]);
+        } elseif ($request->has('updateStatus')) {
+            return response()->json([
+                'success' => true,
+                'data' => $this->updateStatus($request, $request->id)
+            ]);
+
+        } elseif ($request->has('cancel')) {
+            return response()->json([
+                'success' => true,
+                'data' => $this->cancel($request, $request->id)
+            ]);
+        }
+
         $user = $request->user();
 
         $query = Booking::with(['customer', 'room', 'services']);
 
         // If customer, only show their bookings
-        if ($user instanceof \App\Models\Customer) {
+        if ($user instanceof Customer) {
+
             $query->where('customer_id', $user->id);
         }
 
@@ -79,12 +103,13 @@ class BookingController extends Controller
 
         // Check authorization
         $user = $request->user();
-        if ($user instanceof \App\Models\Customer && $booking->customer_id != $user->id) {
+        if ($user instanceof Customer && $booking->customer_id != $user->id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized to view this booking'
             ], 403);
         }
+
 
         return response()->json([
             'success' => true,
@@ -306,7 +331,10 @@ class BookingController extends Controller
 
         // Check authorization
         $user = $request->user();
-        if ($user instanceof \App\Models\Customer && $booking->customer_id != $user->id) {
+        if (
+            $user instanceof Customer
+            && $booking->customer_id != $user->id
+        ) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized to cancel this booking'
@@ -388,7 +416,9 @@ class BookingController extends Controller
         $query = Booking::query();
 
         // If customer, only their stats
-        if ($user instanceof \App\Models\Customer) {
+        if (
+            $user instanceof Customer
+        ) {
             $query->where('customer_id', $user->id);
         }
 

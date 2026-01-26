@@ -6,7 +6,7 @@ use App\Models\Customer;
 use App\Models\Booking;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-// 💡 Laravel Log Facade එක භාවිතා කිරීමට මෙය අවශ්‍යයි
+
 use Illuminate\Support\Facades\Log;
 
 class CustomerController extends Controller
@@ -14,6 +14,20 @@ class CustomerController extends Controller
     // Get all customers (admin/staff only)
     public function index(Request $request)
     {
+
+
+        if ($request->has('bookingHistory')) {
+            return response()->json([
+                'success' => true,
+                'data' => $this->bookingHistory($request, $id = null)
+            ]);
+        } elseif ($request->has('statistics')) {
+            return response()->json([
+                'success' => true,
+                'data' => $this->statistics($request)
+            ]);
+        }
+
         // Check authorization
         $user = $request->user();
         if (!$user->isAdmin() && !$user->isStaff()) {
@@ -164,7 +178,7 @@ class CustomerController extends Controller
         ]);
     }
 
-    // Get customer statistics
+    // Get customer statistics (admin/staff only)
     public function statistics(Request $request)
     {
         // Check authorization - ADD DEBUGGING
